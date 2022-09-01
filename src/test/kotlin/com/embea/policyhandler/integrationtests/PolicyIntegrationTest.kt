@@ -21,4 +21,27 @@ class PolicyIntegrationTest(@Autowired private val mockMvc: MockMvc) {
         }.andExpect { status { isNotFound() } }
 
     }
+
+    @Test
+    fun `POST policy should return 400 if date provided is in past`() {
+
+        mockMvc.post(URI("/policy")) {
+            contentType = APPLICATION_JSON
+            content = """{
+                            "startDate": "15.07.2022",
+                            "insuredPersons": [
+                                {
+                                    "firstName": "Jane",
+                                    "secondName": "Johnson",
+                                    "premium": 12.90
+                                },
+                                {
+                                    "firstName": "Jack",
+                                    "secondName": "Doe",
+                                    "premium": 15.90
+                                }
+                            ]
+                        }""".trimMargin()
+        }.andExpect { status { isBadRequest() } }
+    }
 }
