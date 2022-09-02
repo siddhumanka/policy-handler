@@ -7,6 +7,7 @@ import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.http.MediaType.APPLICATION_JSON
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.post
+import org.springframework.test.web.servlet.result.MockMvcResultMatchers
 import java.net.URI
 
 @SpringBootTest
@@ -43,5 +44,34 @@ class PolicyIntegrationTest(@Autowired private val mockMvc: MockMvc) {
                             ]
                         }""".trimMargin()
         }.andExpect { status { isBadRequest() } }
+    }
+
+    @Test
+    fun `POST policy should create a policy`() {
+
+        val startDate = "15.07.2023"
+        mockMvc.post(URI("/policy")) {
+            contentType = APPLICATION_JSON
+            content = """{
+                            "startDate": "$startDate",
+                            "insuredPersons": [
+                                {
+                                    "firstName": "Jane",
+                                    "secondName": "Johnson",
+                                    "premium": 12.90
+                                },
+                                {
+                                    "firstName": "Jack",
+                                    "secondName": "Doe",
+                                    "premium": 15.90
+                                }
+                            ]
+                        }""".trimMargin()
+        }.andExpect { status { isOk() } }
+            .andExpect { MockMvcResultMatchers.jsonPath("$.policyId").exists() }
+            .andExpect { MockMvcResultMatchers.jsonPath("$.startDate").value(startDate) }
+            .andExpect { MockMvcResultMatchers.jsonPath("$.insuredPersons").isNotEmpty }
+            .andExpect { MockMvcResultMatchers.jsonPath("$.insuredPersons[0].id").isNotEmpty }
+            .andExpect { MockMvcResultMatchers.jsonPath("$.totalPremium").value(28.80) }
     }
 }
