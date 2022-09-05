@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestBody
+import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 import java.time.LocalDate
@@ -18,27 +19,27 @@ import java.time.format.DateTimeFormatter
 import java.util.UUID
 import javax.validation.Valid
 
-@RestController("/")
+@RestController("PolicyController")
+@RequestMapping("/policy")
 class PolicyController(private val policyService: PolicyService) {
 
-    @PostMapping("/policy")
+    @PostMapping
     fun createPolicy(@Valid @RequestBody createPolicyRequest: CreatePolicyRequest): CreatePolicyResponse {
         return policyService.createPolicy(createPolicyRequest)
     }
 
-    @PutMapping("/policy")
+    @PutMapping
     fun updatePolicy(@RequestBody updatePolicyRequest: UpdatePolicyRequest): UpdatePolicyResponse {
         return policyService.updatePolicy(updatePolicyRequest)
     }
 
-    @GetMapping("/policy")
+    @GetMapping
     fun getPolicy(
         @RequestParam("policyId") policyId: String,
-        @RequestParam("requestDate") requestDate: String?
+        @RequestParam("requestDate", required = false) requestDate: String?
     ): GetPolicyResponse {
-        val parsedRequestDate = LocalDate.parse(requestDate, DateTimeFormatter.ofPattern("dd.MM.yyyy"))
         val parsedPolicyId = UUID.fromString(policyId)
-        return policyService.getPolicy(GetPolicyRequest.from(parsedPolicyId, parsedRequestDate))
+        return policyService.getPolicy(GetPolicyRequest.from(parsedPolicyId, requestDate))
     }
 
 

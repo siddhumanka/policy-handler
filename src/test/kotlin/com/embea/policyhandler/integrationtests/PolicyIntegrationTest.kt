@@ -139,6 +139,30 @@ class PolicyIntegrationTest(@Autowired private val mockMvc: MockMvc) {
         assertThat(jsonNode.path("totalPremium").asDouble()).isEqualTo(28.80)
     }
 
+    @Test
+    fun `GET policy should return policy for if no request date is given`() {
+        val createPolicyResponse = createPolicy()
+        val createPolicyJsonNode = mapper.readTree(createPolicyResponse.response.contentAsString)
+        val policyId = createPolicyJsonNode.path("policyId").asText()
+
+        val informationResponse = mockMvc.get(URI("/policy?policyId=$policyId")) {
+            contentType = APPLICATION_JSON
+        }.andExpect { status { isOk() } }.andReturn()
+
+        val jsonNode = mapper.readTree(informationResponse.response.contentAsString)
+        assertThat(jsonNode.path("policyId").asText()).isEqualTo(policyId)
+        assertThat(jsonNode.path("requestDate").asText()).isNotEmpty
+        assertThat(jsonNode.path("insuredPersons").get(0).path("id").asInt()).isEqualTo(1)
+        assertThat(jsonNode.path("insuredPersons").get(0).path("firstName").asText()).isEqualTo("Jane")
+        assertThat(jsonNode.path("insuredPersons").get(0).path("secondName").asText()).isEqualTo("Johnson")
+        assertThat(jsonNode.path("insuredPersons").get(0).path("premium").asDouble()).isEqualTo(12.90)
+        assertThat(jsonNode.path("insuredPersons").get(1).path("id").asInt()).isEqualTo(2)
+        assertThat(jsonNode.path("insuredPersons").get(1).path("firstName").asText()).isEqualTo("Jack")
+        assertThat(jsonNode.path("insuredPersons").get(1).path("secondName").asText()).isEqualTo("Doe")
+        assertThat(jsonNode.path("insuredPersons").get(1).path("premium").asDouble()).isEqualTo(15.9)
+        assertThat(jsonNode.path("totalPremium").asDouble()).isEqualTo(28.80)
+    }
+
     private fun createPolicy(startDate: String = "15.07.2023") = mockMvc.post(URI("/policy")) {
         contentType = APPLICATION_JSON
         content = """{
