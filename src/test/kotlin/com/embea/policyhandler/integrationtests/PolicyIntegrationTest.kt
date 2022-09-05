@@ -116,27 +116,27 @@ class PolicyIntegrationTest(@Autowired private val mockMvc: MockMvc) {
 
     @Test
     fun `GET policy should return policy for a given request date`() {
-        val requestDate = "17.07.2023"
+        val requestDate = "17.10.2023"
         val createPolicyResponse = createPolicy()
         val createPolicyJsonNode = mapper.readTree(createPolicyResponse.response.contentAsString)
         val policyId = createPolicyJsonNode.path("policyId").asText()
 
-        val updatePolicyResponse = mockMvc.get(URI("/policy?policyId=$policyId&requestDate=$requestDate")) {
+        val informationResponse = mockMvc.get(URI("/policy?policyId=$policyId&requestDate=$requestDate")) {
             contentType = APPLICATION_JSON
         }.andExpect { status { isOk() } }.andReturn()
 
-        val jsonNode = mapper.readTree(updatePolicyResponse.response.contentAsString)
+        val jsonNode = mapper.readTree(informationResponse.response.contentAsString)
         assertThat(jsonNode.path("policyId").asText()).isEqualTo(policyId)
-        assertThat(jsonNode.path("effectiveDate").asText()).isEqualTo(requestDate)
+        assertThat(jsonNode.path("requestDate").asText()).isEqualTo(requestDate)
         assertThat(jsonNode.path("insuredPersons").get(0).path("id").asInt()).isEqualTo(1)
         assertThat(jsonNode.path("insuredPersons").get(0).path("firstName").asText()).isEqualTo("Jane")
         assertThat(jsonNode.path("insuredPersons").get(0).path("secondName").asText()).isEqualTo("Johnson")
         assertThat(jsonNode.path("insuredPersons").get(0).path("premium").asDouble()).isEqualTo(12.90)
-        assertThat(jsonNode.path("insuredPersons").get(1).path("id").asInt()).isEqualTo(3)
-        assertThat(jsonNode.path("insuredPersons").get(1).path("firstName").asText()).isEqualTo("Will")
-        assertThat(jsonNode.path("insuredPersons").get(1).path("secondName").asText()).isEqualTo("SlapSmith")
-        assertThat(jsonNode.path("insuredPersons").get(1).path("premium").asDouble()).isEqualTo(12.90)
-        assertThat(jsonNode.path("totalPremium").asDouble()).isEqualTo(25.80)
+        assertThat(jsonNode.path("insuredPersons").get(1).path("id").asInt()).isEqualTo(2)
+        assertThat(jsonNode.path("insuredPersons").get(1).path("firstName").asText()).isEqualTo("Jack")
+        assertThat(jsonNode.path("insuredPersons").get(1).path("secondName").asText()).isEqualTo("Doe")
+        assertThat(jsonNode.path("insuredPersons").get(1).path("premium").asDouble()).isEqualTo(15.9)
+        assertThat(jsonNode.path("totalPremium").asDouble()).isEqualTo(28.80)
     }
 
     private fun createPolicy(startDate: String = "15.07.2023") = mockMvc.post(URI("/policy")) {

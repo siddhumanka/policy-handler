@@ -8,10 +8,10 @@ import java.time.LocalDate
 import java.util.UUID
 
 @Validated
-data class UpdatePolicyResponse(
+data class GetPolicyResponse(
     val policyId: UUID = UUID.randomUUID(),
     @JsonFormat(pattern = "dd.MM.yyyy")
-    val effectiveDate: LocalDate,
+    val requestDate: LocalDate,
     val insuredPersons: Set<InsuredPersonDto>,
     val totalPremium: BigDecimal
 )

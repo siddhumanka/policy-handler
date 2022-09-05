@@ -10,6 +10,6 @@ data class CreatePolicyResponse(
     val policyId: UUID,
     @JsonFormat(pattern = "dd.MM.yyyy")
     val startDate: LocalDate,
-    val insuredPersons: List<InsuredPersonDto>,
+    val insuredPersons: Set<InsuredPersonDto>,
     val totalPremium: BigDecimal
 )

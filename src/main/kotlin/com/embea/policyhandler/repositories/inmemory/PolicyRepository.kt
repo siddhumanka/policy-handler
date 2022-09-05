@@ -8,8 +8,9 @@ import java.util.UUID
 @Repository
 class PolicyRepository(private val mapOfPolicies: MutableMap<UUID, Policy> = mutableMapOf()) {
 
-    fun save(policy: Policy) {
+    fun save(policy: Policy): Policy {
         mapOfPolicies[policy.id] = policy
+        return policy
     }
 
     fun addInsuredPerson(policy: Policy, insuredPersons: Set<InsuredPerson>): Policy {
@@ -27,6 +28,5 @@ class PolicyRepository(private val mapOfPolicies: MutableMap<UUID, Policy> = mut
     }
 
     fun getReferenceById(policyId: UUID): Policy? = mapOfPolicies[policyId]
-
 
 }

@@ -2,8 +2,10 @@ package com.embea.policyhandler.services
 
 import com.embea.policyhandler.dtos.exceptions.PolicyNotFoundException
 import com.embea.policyhandler.dtos.requests.CreatePolicyRequest
+import com.embea.policyhandler.dtos.requests.GetPolicyRequest
 import com.embea.policyhandler.dtos.requests.UpdatePolicyRequest
 import com.embea.policyhandler.dtos.responses.CreatePolicyResponse
+import com.embea.policyhandler.dtos.responses.GetPolicyResponse
 import com.embea.policyhandler.dtos.responses.UpdatePolicyResponse
 import com.embea.policyhandler.repositories.inmemory.PolicyRepository
 import com.embea.policyhandler.repositories.inmemory.models.Policy
@@ -22,13 +24,13 @@ class PolicyService(private val policyRepository: PolicyRepository) {
         val policy =
             Policy(startDate = request.startDate, insuredPersons = insuredPersons)
 
-        policyRepository.save(policy)
+        val savedPolicy = policyRepository.save(policy)
 
         return CreatePolicyResponse(
-            policyId = policy.id,
-            startDate = policy.startDate,
-            insuredPersons = policy.insuredPersons.map { it.toDto() },
-            totalPremium = policy.insuredPersons.map { it.premium }
+            policyId = savedPolicy.id,
+            startDate = savedPolicy.startDate,
+            insuredPersons = savedPolicy.insuredPersons.map { it.toDto() }.toSet(),
+            totalPremium = savedPolicy.insuredPersons.map { it.premium }
                 .reduceRight { first, next -> first + next }
         )
     }
@@ -43,12 +45,25 @@ class PolicyService(private val policyRepository: PolicyRepository) {
         )
 
         return UpdatePolicyResponse(
-            policyId = request.policyId,
-            effectiveDate = request.effectiveDate,
-            insuredPersons = savedPolicy.insuredPersons.map { it.toDto() },
+            policyId = savedPolicy.id,
+            effectiveDate = savedPolicy.effectiveDate!!,
+            insuredPersons = savedPolicy.insuredPersons.map { it.toDto() }.toSet(),
             totalPremium = savedPolicy.insuredPersons.map { it.premium }
                 .reduceRight { first, next -> first + next }
         )
     }
 
+    fun getPolicy(request: GetPolicyRequest): GetPolicyResponse {
+        val policy = policyRepository.getReferenceById(request.policyId) ?: throw PolicyNotFoundException()
+
+        val savedPolicy = policyRepository.save(policy.copy(requestDate = request.requestDate))
+
+        return GetPolicyResponse(
+            policyId = savedPolicy.id,
+            requestDate = savedPolicy.requestDate!!,
+            insuredPersons = savedPolicy.insuredPersons.map { it.toDto() }.toSet(),
+            totalPremium = savedPolicy.insuredPersons.map { it.premium }
+                .reduceRight { first, next -> first + next }
+        )
+    }
 }

@@ -26,8 +26,9 @@ class PolicyRepositoryTest {
         val policyId = UUID.randomUUID()
         val policy = Policy(policyId, LocalDate.now(), insuredPersons = emptySet())
 
-        policyRepository.save(policy)
+        val savedPolicy = policyRepository.save(policy)
 
+        assertThat(savedPolicy).isEqualTo(policy)
         assertThat(mapOfPolicies[policyId]).isNotNull
         assertThat(mapOfPolicies[policyId]).isEqualTo(policy)
     }

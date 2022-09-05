@@ -7,5 +7,6 @@ data class Policy(
     val id: UUID = UUID.randomUUID(),
     val startDate: LocalDate,
     val effectiveDate: LocalDate? = null,
+    val requestDate: LocalDate? = null,
     val insuredPersons: Set<InsuredPerson>
 )
