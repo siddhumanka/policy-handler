@@ -1,14 +1,18 @@
 package com.embea.policyhandler.services
 
 import com.embea.policyhandler.dtos.InsuredPersonDto
-import com.embea.policyhandler.helpers.TesDtosBuilder.dummyCreatePolicyRequest
-import com.embea.policyhandler.helpers.TesDtosBuilder.dummyUpdatePolicyRequest
-import com.embea.policyhandler.models.Policy
-import com.embea.policyhandler.repositories.PolicyRepository
+import com.embea.policyhandler.helpers.TestDtosBuilder.dummyCreatePolicyRequest
+import com.embea.policyhandler.helpers.TestDtosBuilder.dummyUpdatePolicyRequest
+import com.embea.policyhandler.repositories.inmemory.PolicyRepository
+import com.embea.policyhandler.repositories.inmemory.models.InsuredPerson
+import com.embea.policyhandler.repositories.inmemory.models.Policy
 import io.mockk.every
 import io.mockk.impl.annotations.InjectMockKs
 import io.mockk.impl.annotations.MockK
 import io.mockk.junit5.MockKExtension
+import io.mockk.justRun
+import io.mockk.slot
+import io.mockk.verify
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
@@ -33,14 +37,8 @@ class PolicyServiceTest {
         val expectedSecondPremium = BigDecimal(22.5)
         val secondInsuredPerson =
             InsuredPersonDto(firstName = "wonder", secondName = "woman", premium = expectedSecondPremium)
-        val insuredPersons = listOf(firstInsuredPerson, secondInsuredPerson)
-        val policy = Policy(
-            startDate = startDate,
-            insuredPersons = insuredPersons.mapIndexed { index, person -> person.toInsuredPerson(index.toLong() + 1L) }
-                .toMutableList()
-        )
-
-        every { policyRepository.saveAndFlush(any()) } returns policy
+        val insuredPersons = setOf(firstInsuredPerson, secondInsuredPerson)
+        justRun { policyRepository.save(any()) }
 
         val createPolicyResponse = service.createPolicy(
             dummyCreatePolicyRequest(
@@ -48,18 +46,13 @@ class PolicyServiceTest {
                 insuredPersons = insuredPersons
             )
         )
+        val argumentCaptor = slot<Policy>()
+        verify { policyRepository.save(capture(argumentCaptor)) }
 
-        assertThat(createPolicyResponse.policyId).isEqualTo(policy.id)
+        assertThat(createPolicyResponse.policyId).isEqualTo(argumentCaptor.captured.id)
+        assertThat(createPolicyResponse.insuredPersons).isNotEmpty
         assertThat(createPolicyResponse.startDate).isEqualTo(startDate)
-        assertThat(createPolicyResponse.insuredPersons[0].id).isEqualTo(1)
-        assertThat(createPolicyResponse.insuredPersons[0].firstName).isEqualTo("bat")
-        assertThat(createPolicyResponse.insuredPersons[0].secondName).isEqualTo("man")
-        assertThat(createPolicyResponse.insuredPersons[0].premium).isEqualTo(expectedFirstPremium)
-        assertThat(createPolicyResponse.insuredPersons[1].id).isEqualTo(2)
-        assertThat(createPolicyResponse.insuredPersons[1].firstName).isEqualTo("wonder")
-        assertThat(createPolicyResponse.insuredPersons[1].secondName).isEqualTo("woman")
-        assertThat(createPolicyResponse.insuredPersons[1].premium).isEqualTo(expectedSecondPremium)
-        assertThat(createPolicyResponse.totalPremium).isEqualTo(expectedFirstPremium + expectedSecondPremium)
+
     }
 
     @Test
@@ -68,48 +61,43 @@ class PolicyServiceTest {
         val effectiveDate = LocalDate.now().plusDays(42)
         val expectedFirstPremium = BigDecimal(34)
         val firstInsuredPerson =
-            InsuredPersonDto(firstName = "bat", secondName = "man", premium = expectedFirstPremium)
+            InsuredPerson(firstName = "bat", secondName = "man", premium = expectedFirstPremium)
         val expectedSecondPremium = BigDecimal(22.5)
         val secondInsuredPerson =
-            InsuredPersonDto(firstName = "wonder", secondName = "woman", premium = expectedSecondPremium)
+            InsuredPerson(firstName = "wonder", secondName = "woman", premium = expectedSecondPremium)
         val expectedThirdPremium = BigDecimal(12.5)
         val thirdInsuredPerson =
             InsuredPersonDto(firstName = "nia", secondName = "nal", premium = expectedThirdPremium)
-        val insuredPersons = listOf(firstInsuredPerson, secondInsuredPerson)
+        val insuredPersons = mutableSetOf(firstInsuredPerson, secondInsuredPerson)
         val policy = Policy(
             startDate = startDate,
-            insuredPersons = insuredPersons.mapIndexed { index, person -> person.toInsuredPerson(index.toLong() + 1) }
-                .toMutableList()
+            insuredPersons = insuredPersons
+        )
+
+        val updatedPolicy = Policy(
+            startDate = startDate,
+            effectiveDate = effectiveDate,
+            insuredPersons = insuredPersons + thirdInsuredPerson.toInsuredPerson()
         )
 
         every { policyRepository.getReferenceById(policy.id) } returns policy
+        every { policyRepository.addInsuredPerson(any(), any()) } returns updatedPolicy
 
-        policy.insuredPersons.removeLast()
-        policy.insuredPersons.add(
-            thirdInsuredPerson.copy().toInsuredPerson(3)
-        )
-        every { policyRepository.save(any()) } returns policy.copy(
-            insuredPersons = policy.insuredPersons
-        )
-
-        val updatePolicyResponse = service.updatePolicy(
-            dummyUpdatePolicyRequest(
-                policyId = policy.id,
-                effectiveDate = effectiveDate,
-                insuredPersons = mutableListOf(firstInsuredPerson.copy(id = 1L), thirdInsuredPerson)
+        val updatePolicyResponse =
+            service.updatePolicy(
+                dummyUpdatePolicyRequest(
+                    policyId = policy.id,
+                    effectiveDate = effectiveDate,
+                    setOf(thirdInsuredPerson)
+                )
             )
-        )
 
+        val policyArgumentCaptor = slot<Policy>()
+        verify { policyRepository.addInsuredPerson(capture(policyArgumentCaptor), any()) }
+
+        assertThat(policyArgumentCaptor.captured.id).isEqualTo(policy.id)
+        assertThat(policyArgumentCaptor.captured.effectiveDate).isEqualTo(effectiveDate)
         assertThat(updatePolicyResponse.policyId).isEqualTo(policy.id)
-        assertThat(updatePolicyResponse.effectiveDate).isEqualTo(effectiveDate)
-        assertThat(updatePolicyResponse.insuredPersons[0].id).isEqualTo(1)
-        assertThat(updatePolicyResponse.insuredPersons[0].firstName).isEqualTo("bat")
-        assertThat(updatePolicyResponse.insuredPersons[0].secondName).isEqualTo("man")
-        assertThat(updatePolicyResponse.insuredPersons[0].premium).isEqualTo(expectedFirstPremium)
-        assertThat(updatePolicyResponse.insuredPersons[1].id).isEqualTo(3)
-        assertThat(updatePolicyResponse.insuredPersons[1].firstName).isEqualTo("nia")
-        assertThat(updatePolicyResponse.insuredPersons[1].secondName).isEqualTo("nal")
-        assertThat(updatePolicyResponse.insuredPersons[1].premium).isEqualTo(expectedThirdPremium)
-        assertThat(updatePolicyResponse.totalPremium).isEqualTo(expectedFirstPremium + expectedThirdPremium)
+        assertThat(updatePolicyResponse.insuredPersons.map { it.firstName }).contains("nia")
     }
 }

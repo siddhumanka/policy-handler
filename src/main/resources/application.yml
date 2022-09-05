@@ -20,3 +20,4 @@ spring:
         dialect: org.hibernate.dialect.H2Dialect
         use_sql_comments: true
         format_sql: true
+logging.level.org.hibernate: trace

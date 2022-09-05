@@ -13,5 +13,5 @@ data class UpdatePolicyRequest(
     @field:Future(message = "effectiveDate should be in future always")
     @JsonFormat(pattern = "dd.MM.yyyy")
     val effectiveDate: LocalDate,
-    val insuredPersons: List<InsuredPersonDto>
+    val insuredPersons: Set<InsuredPersonDto>
 )

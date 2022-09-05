@@ -7,16 +7,16 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.http.MediaType.APPLICATION_JSON
-import org.springframework.test.annotation.DirtiesContext
 import org.springframework.test.web.servlet.MockMvc
+import org.springframework.test.web.servlet.get
 import org.springframework.test.web.servlet.post
 import org.springframework.test.web.servlet.put
 import org.springframework.transaction.annotation.Transactional
 import java.net.URI
 
+
 @SpringBootTest
 @AutoConfigureMockMvc
-@DirtiesContext
 @Transactional
 class PolicyIntegrationTest(@Autowired private val mockMvc: MockMvc) {
 
@@ -105,6 +105,31 @@ class PolicyIntegrationTest(@Autowired private val mockMvc: MockMvc) {
         val jsonNode = mapper.readTree(updatePolicyResponse.response.contentAsString)
         assertThat(jsonNode.path("policyId").asText()).isEqualTo(policyId)
         assertThat(jsonNode.path("effectiveDate").asText()).isEqualTo(effectiveDate)
+        assertThat(jsonNode.path("insuredPersons").get(0).path("id").asInt()).isEqualTo(1)
+        assertThat(jsonNode.path("insuredPersons").get(0).path("firstName").asText()).isEqualTo("Jane")
+        assertThat(jsonNode.path("insuredPersons").get(0).path("secondName").asText()).isEqualTo("Johnson")
+        assertThat(jsonNode.path("insuredPersons").get(0).path("premium").asDouble()).isEqualTo(12.90)
+        assertThat(jsonNode.path("insuredPersons").get(1).path("id").asInt()).isEqualTo(3)
+        assertThat(jsonNode.path("insuredPersons").get(1).path("firstName").asText()).isEqualTo("Will")
+        assertThat(jsonNode.path("insuredPersons").get(1).path("secondName").asText()).isEqualTo("SlapSmith")
+        assertThat(jsonNode.path("insuredPersons").get(1).path("premium").asDouble()).isEqualTo(12.90)
+        assertThat(jsonNode.path("totalPremium").asDouble()).isEqualTo(25.80)
+    }
+
+    @Test
+    fun `GET policy should return policy for a given request date`() {
+        val requestDate = "17.07.2023"
+        val createPolicyResponse = createPolicy()
+        val createPolicyJsonNode = mapper.readTree(createPolicyResponse.response.contentAsString)
+        val policyId = createPolicyJsonNode.path("policyId").asText()
+
+        val updatePolicyResponse = mockMvc.get(URI("/policy?policyId=$policyId&requestDate=$requestDate")) {
+            contentType = APPLICATION_JSON
+        }.andExpect { status { isOk() } }.andReturn()
+
+        val jsonNode = mapper.readTree(updatePolicyResponse.response.contentAsString)
+        assertThat(jsonNode.path("policyId").asText()).isEqualTo(policyId)
+        assertThat(jsonNode.path("effectiveDate").asText()).isEqualTo(requestDate)
         assertThat(jsonNode.path("insuredPersons").get(0).path("id").asInt()).isEqualTo(1)
         assertThat(jsonNode.path("insuredPersons").get(0).path("firstName").asText()).isEqualTo("Jane")
         assertThat(jsonNode.path("insuredPersons").get(0).path("secondName").asText()).isEqualTo("Johnson")

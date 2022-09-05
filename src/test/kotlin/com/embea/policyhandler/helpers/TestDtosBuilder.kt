@@ -6,11 +6,11 @@ import com.embea.policyhandler.dtos.requests.UpdatePolicyRequest
 import java.time.LocalDate
 import java.util.UUID
 
-object TesDtosBuilder {
+object TestDtosBuilder {
 
     fun dummyCreatePolicyRequest(
         startDate: LocalDate = LocalDate.of(2023, 5, 5),
-        insuredPersons: List<InsuredPersonDto> = emptyList()
+        insuredPersons: Set<InsuredPersonDto> = emptySet()
     ): CreatePolicyRequest {
         return CreatePolicyRequest(
             startDate = startDate,
@@ -21,7 +21,7 @@ object TesDtosBuilder {
     fun dummyUpdatePolicyRequest(
         policyId : UUID = UUID.randomUUID(),
         effectiveDate: LocalDate = LocalDate.of(2023, 5, 5),
-        insuredPersons: List<InsuredPersonDto> = emptyList()
+        insuredPersons: Set<InsuredPersonDto> = emptySet()
     ): UpdatePolicyRequest {
         return UpdatePolicyRequest(
             policyId = policyId,

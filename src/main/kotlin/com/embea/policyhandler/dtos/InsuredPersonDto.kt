@@ -1,6 +1,6 @@
 package com.embea.policyhandler.dtos
 
-import com.embea.policyhandler.models.InsuredPerson
+import com.embea.policyhandler.repositories.inmemory.models.InsuredPerson
 import com.fasterxml.jackson.annotation.JsonInclude
 import java.math.BigDecimal
 
@@ -11,6 +11,7 @@ data class InsuredPersonDto(
     val secondName: String,
     val premium: BigDecimal
 ) {
-    fun toInsuredPerson(id: Long) =
-        InsuredPerson(id = id, firstName = firstName, secondName = secondName, premium = premium)
+
+    fun toInsuredPerson() =
+        InsuredPerson( id = id , firstName = firstName, secondName = secondName, premium = premium)
 }

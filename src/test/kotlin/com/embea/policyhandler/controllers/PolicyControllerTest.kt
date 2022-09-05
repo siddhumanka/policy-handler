@@ -2,8 +2,8 @@ package com.embea.policyhandler.controllers
 
 import com.embea.policyhandler.dtos.responses.CreatePolicyResponse
 import com.embea.policyhandler.dtos.responses.UpdatePolicyResponse
-import com.embea.policyhandler.helpers.TesDtosBuilder.dummyCreatePolicyRequest
-import com.embea.policyhandler.helpers.TesDtosBuilder.dummyUpdatePolicyRequest
+import com.embea.policyhandler.helpers.TestDtosBuilder.dummyCreatePolicyRequest
+import com.embea.policyhandler.helpers.TestDtosBuilder.dummyUpdatePolicyRequest
 import com.embea.policyhandler.services.PolicyService
 import io.mockk.every
 import io.mockk.impl.annotations.InjectMockKs
