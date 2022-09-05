@@ -11,13 +11,11 @@ import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.get
 import org.springframework.test.web.servlet.post
 import org.springframework.test.web.servlet.put
-import org.springframework.transaction.annotation.Transactional
 import java.net.URI
 
 
 @SpringBootTest
 @AutoConfigureMockMvc
-@Transactional
 class PolicyIntegrationTest(@Autowired private val mockMvc: MockMvc) {
 
     private val mapper = jacksonObjectMapper()
