@@ -68,7 +68,7 @@ class PolicyControllerTest {
     fun `getPolicy should return policy based on request date provided`() {
         val policyRequest = GetPolicyRequest.from(
             policyId = UUID.randomUUID(),
-            LocalDate.parse("12.08.2021", DateTimeFormatter.ofPattern("dd.MM.yyyy"))
+            "12.08.2021"
         )
 
         val expectedResponse =
